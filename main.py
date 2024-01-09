@@ -476,7 +476,7 @@ def train_pretrain(model, criterion, optimizer, dataset, test_dataset=None, epoc
                 out, _ = model(lr_son)
                 mse_loss = criterion(out, loss_hr.to(device))
                 mse_test += mse_loss.item()
-            if mse_test < best_mse_test and epoch > 0:
+            if mse_test < best_mse_test and epoch > 30:
                 best_mse_test = mse_test
                 best_epoch = epoch
                 torch.save(model.module.state_dict(), f"./checkpoint/pretrained/{postfix}/epoch_{epoch}_{postfix}.pt")
@@ -491,7 +491,7 @@ largeScaleDataset_test = PretrainDataset(hr_dir = f'', transform = None, data_nu
 
 start_time = time.time()
 model, best_epoch = train_pretrain(model, nn.MSELoss(), optimizer, dataset = largeScaleDataset,
-                         test_dataset=largeScaleDataset_test, epochs=2, batch_size = 16, scale_factor = scale_factor,
+                         test_dataset=largeScaleDataset_test, epochs=150, batch_size = 16, scale_factor = scale_factor,
                                     pretrained_checkpoint = 0, data_parallel = True)
 print("Time Elapsed for Large-scale Learning: {} min".format((time.time()-start_time)//60))
 
@@ -556,7 +556,7 @@ def train_noisyfinetune(model, criterion, NoisyDataset, epochs = 1500, scale_fac
 
         if best_test_loss >  mse_loss_test_sum.item():
             best_test_loss = mse_loss_test_sum.item()
-            if epoch > 10:
+            if epoch > 600:
                 torch.save(model.state_dict(), f"./checkpoint/noisy_finetuned/{postfix}/epoch_{epoch}_{postfix}.pt")
         if epoch % 50 == 0 and epoch > 600:
             torch.save(model.state_dict(), f"./checkpoint/noisy_finetuned/{postfix}/epoch_{epoch}_{postfix}.pt")
@@ -570,7 +570,7 @@ def train_noisyfinetune(model, criterion, NoisyDataset, epochs = 1500, scale_fac
 NoisyDataset = NoisyDataGenerator(hr_dir = f'', transform = True, scale_factor = scale_factor)
 
 start_time = time.time()
-model, loss_test, noisy_finetune_best_epoch = train_noisyfinetune(model, nn.MSELoss(), NoisyDataset, epochs = 20)
+model, loss_test, noisy_finetune_best_epoch = train_noisyfinetune(model, nn.MSELoss(), NoisyDataset, epochs = 1000)
 
 print("Time Elapsed for Fine Tuning: {} min".format((time.time()-start_time)//60))
 print(noisy_finetune_best_epoch)
