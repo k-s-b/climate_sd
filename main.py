@@ -34,6 +34,27 @@ groups = 3
 device_ids = [4, 3]
 
 
+def fix_seed(seed):
+    # Python's built-in random module
+    random.seed(seed)
+
+    # Numpy
+    np.random.seed(seed)
+
+    # PyTorch
+    torch.manual_seed(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed(seed)
+        torch.cuda.manual_seed_all(seed)  # for multi-GPU.
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
+
+    # Environment variables for deterministic algorithms
+    os.environ['PYTHONHASHSEED'] = str(seed)
+
+fix_seed(42)
+
+
 ####################################################################
 ##   Dataset      ##################################################
 ####################################################################
@@ -493,7 +514,7 @@ start_time = time.time()
 model, best_epoch = train_pretrain(model, nn.MSELoss(), optimizer, dataset = largeScaleDataset,
                          test_dataset=largeScaleDataset_test, epochs=150, batch_size = 16, scale_factor = scale_factor,
                                     pretrained_checkpoint = 0, data_parallel = True)
-print("Time Elapsed for Large-scale Learning: {} min".format((time.time()-start_time)//60))
+print("Time Elapsed for Pretraining: {} min".format((time.time()-start_time)//60))
 
 del largeScaleDataset
 del largeScaleDataset_test
@@ -507,8 +528,6 @@ model.load_state_dict(torch.load(f"./checkpoint/pretrained/{postfix}/epoch_{best
 
 def train_noisyfinetune(model, criterion, NoisyDataset, epochs = 1500, scale_factor = 2.,
                        vars_in = vars_in, vars_out = vars_out, batch_lr = 1e-4, instance_lr = 1e-2):
-
-    batch_optimizer = torch.optim.Adam(model.parameters(), lr=batch_lr)
     instance_optimizer = torch.optim.Adam(model.parameters(), lr=instance_lr)
 
     os.makedirs(f"./checkpoint/noisy_finetuned/{postfix}", exist_ok=True)
@@ -521,7 +540,6 @@ def train_noisyfinetune(model, criterion, NoisyDataset, epochs = 1500, scale_fac
     best_test_loss = 10000.0
     for epoch in range(epochs):
 
-        # params = model.state_dict()
         test_losses = []
         # Evaluate training loss
         for iteration in range(NoisyDataset.batch_num):
@@ -531,7 +549,7 @@ def train_noisyfinetune(model, criterion, NoisyDataset, epochs = 1500, scale_fac
 
             instance_optimizer.zero_grad()
 
-            mse_loss.backward(retain_graph=True)
+            mse_loss.backward()
 
             # Update task-level parameter
             instance_optimizer.step()
@@ -542,14 +560,8 @@ def train_noisyfinetune(model, criterion, NoisyDataset, epochs = 1500, scale_fac
                 out_test, out_mid = model(lr_son_test[iteration, :, :, :, :].to(device))
                 mse_loss_test = criterion(out_test, loss_hr_test[iteration, :, :, :, :].to(device))
                 test_losses.append(mse_loss_test)
-            # model.load_state_dict(params)
 
-
-        batch_optimizer.zero_grad()
         mse_loss_test_sum = sum(test_losses)
-        mse_loss_test_sum = torch.autograd.Variable(mse_loss_test_sum, requires_grad=True)
-        mse_loss_test_sum.backward()
-        batch_optimizer.step()
 
         if epoch % 50 == 0 and epoch != 0:
             print(f"{str(datetime.now())}: fine tuning epoch {epoch}: loss ", mse_loss_test_sum.item())
