@@ -15,7 +15,7 @@ Climate change is one of the most critical challenges that our planet is facing 
 
 
 ## Usage
-To run model change data paths for `HRClimateDataset`, `PretrainDataset`, `NoisyDataGenerator`
+To run model change data paths for `HRClimateDataset`, `PretrainDataset`, `NoisyDataGenerator` in `main.py` and execute it as `python main.py`
 
 ## Data
 High resolution CESM data can be downloaded from Ultra-high-resolution climate simulation project website [at this link](http://climatedata.ibs.re.kr/data/cesm-hires)
