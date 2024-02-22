@@ -25,7 +25,8 @@ High resolution CESM data can be downloaded from Ultra-high-resolution climate s
 
 Paleoclimate LR data with no ground truth             |  CESM data with HR ground truth
 :-------------------------:|:-------------------------:
-![paleo artifacts small](https://github.com/k-s-b/self-scd/assets/62580782/c2e1f46b-8fb9-412e-8d5d-24eda970b878)  |  ![kdd artifacts small](https://github.com/k-s-b/self-scd/assets/62580782/7823bd97-53e4-40fc-9b38-12eff0a37c74)
+![paleo artifacts small](https://github.com/k-s-b/climate_sd/assets/62580782/04c6039b-1338-46d9-9c24-e70a5a2e6853) |  ![kdd artifacts small](https://github.com/k-s-b/climate_sd/assets/62580782/397b765b-2b2e-4f68-979b-4bf11fe70ddf)
+
 
 
 
